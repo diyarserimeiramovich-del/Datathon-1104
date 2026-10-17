@@ -56,19 +56,25 @@ def test_missing_predicate_is_false():
 
 
 def test_cashier_leaves_room_detected():
-    # как в X-26: кассир сидит до 9 с, потом уходит; клиента нет
-    tl = make(lambda t: {"cashier_away": 0.95 if t >= 10 else 0.05}, t_end=19)
+    # как в X-26: кассир за столом до 9 с, потом уходит; клиента нет
+    tl = make(lambda t: {"cashier_present": 0.05 if t >= 10 else 0.95}, t_end=19)
     ev = find_events(tl, LEAVE)
     assert len(ev) == 1 and abs(ev[0]["t"] - 10) <= 1, ev
 
 
 def test_short_absence_ignored():
-    tl = make(lambda t: {"cashier_away": 0.95 if t == 5 else 0.05}, t_end=20)
+    tl = make(lambda t: {"cashier_present": 0.05 if t == 5 else 0.95}, t_end=20)
     assert find_events(tl, LEAVE) == []
 
 
 def test_cashier_always_present_no_event():
-    tl = make(lambda t: {"cashier_away": 0.05}, t_end=20)
+    tl = make(lambda t: {"cashier_present": 0.95}, t_end=20)
+    assert find_events(tl, LEAVE) == []
+
+
+def test_absence_shorter_than_min_duration_ignored():
+    # провал 2 с короче min_duration_sec=2.5 из rules.json
+    tl = make(lambda t: {"cashier_present": 0.05 if 5 <= t <= 7 else 0.95}, t_end=20)
     assert find_events(tl, LEAVE) == []
 
 

@@ -1,5 +1,6 @@
 # Локальная VLM (ставить на машине с GPU). Версии подберите под вашу CUDA.
 torch
+torchvision      # детектор людей для признака «кассир за столом» (app/occupancy.py)
 transformers>=4.45
 accelerate
 pillow
