@@ -1,0 +1,9 @@
+venv311/
+.venv/
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+cache/
+data/contacts/
+cache_run.log

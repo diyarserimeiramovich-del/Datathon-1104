@@ -1,0 +1,9 @@
+# Локальная VLM (ставить на машине с GPU). Версии подберите под вашу CUDA.
+torch
+transformers>=4.45
+accelerate
+pillow
+# опционально для экономии памяти: bitsandbytes
+
+# на Windows torch ставить отдельно с CUDA: pip install torch --index-url https://download.pytorch.org/whl/cu121
+# при нехватке памяти GPU: pip install bitsandbytes и LOAD_4BIT=1

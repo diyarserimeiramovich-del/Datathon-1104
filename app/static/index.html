@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Проверка кассовой дисциплины</title>
+<style>
+  :root { --bg:#fff; --fg:#1b1f24; --muted:#5b6570; --card:#f4f6f8; --ok:#1a7f37; --bad:#c62828; --accent:#0b57d0; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14181d; --fg:#e8ecf0; --muted:#9aa5b1; --card:#1e242b; --ok:#4cc26a; --bad:#ff6b6b; --accent:#7aa7ff; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 system-ui,sans-serif; background:var(--bg); color:var(--fg); }
+  main { max-width:880px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { font-size:1.4rem; }
+  .card { background:var(--card); border-radius:12px; padding:16px; margin:16px 0; }
+  label { display:block; font-size:.9rem; color:var(--muted); margin-bottom:4px; }
+  input[type=password], input[type=file] { width:100%; padding:8px; border-radius:8px; border:1px solid var(--muted); background:var(--bg); color:var(--fg); }
+  button { margin-top:12px; padding:10px 18px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-size:1rem; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  .verdict { font-size:1.2rem; font-weight:600; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); }
+  .frames { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .frames img { max-width:100%; width:280px; border-radius:8px; }
+  .muted { color:var(--muted); font-size:.9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Проверка видео кассира</h1>
+  <div class="card">
+    <label for="key">API-ключ</label>
+    <input id="key" type="password" autocomplete="off">
+    <label for="file" style="margin-top:12px">Видеофайл (.mov)</label>
+    <input id="file" type="file" accept=".mov,video/quicktime,video/mp4">
+    <button id="go">Проверить</button>
+    <div id="status" class="muted" style="margin-top:8px"></div>
+  </div>
+  <div id="result"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+$('key').value = sessionStorage.getItem('k') || '';
+
+$('go').onclick = async () => {
+  const f = $('file').files[0], key = $('key').value;
+  if (!f || !key) { $('status').textContent = 'Укажите ключ и файл'; return; }
+  sessionStorage.setItem('k', key);
+  $('go').disabled = true; $('result').innerHTML = '';
+  $('status').textContent = 'Загрузка видео…';
+  try {
+    const fd = new FormData(); fd.append('file', f);
+    const r = await fetch('/api/v1/analyze', { method:'POST', headers:{'X-API-Key':key}, body:fd });
+    if (!r.ok) throw new Error('Ошибка загрузки: ' + r.status);
+    const { job_id } = await r.json();
+    const t0 = Date.now();
+    while (true) {
+      await new Promise(r => setTimeout(r, 2000));
+      const s = await (await fetch('/api/v1/jobs/' + job_id, { headers:{'X-API-Key':key} })).json();
+      $('status').textContent = 'Анализ… ' + Math.round((Date.now()-t0)/1000) + ' с';
+      if (s.status === 'done') { render(s); $('status').textContent = ''; break; }
+      if (s.status === 'failed') throw new Error(s.error || 'Ошибка обработки');
+    }
+  } catch (e) { $('status').textContent = e.message; }
+  $('go').disabled = false;
+};
+
+function render(s) {
+  const el = $('result');
+  if (s.verdict === 'no_violation') {
+    el.innerHTML = '<div class="card"><div class="verdict ok">Нарушение не обнаружено</div></div>';
+    return;
+  }
+  let h = '<div class="card"><div class="verdict bad">Обнаружены признаки возможных нарушений</div>' +
+          '<div class="muted">Результат является подсказкой для проверки человеком.</div></div>';
+  for (const v of s.violations) {
+    h += '<div class="card"><b>' + esc(v.type) + '</b> · ' + esc(v.timecode_sec) + ' с' +
+         '<p>' + esc(v.description) + '</p>' +
+         '<div class="muted">Основание: ' + esc(v.source || '—') + '</div><div class="frames">' +
+         (v.evidence_frames||[]).map(f => '<figure style="margin:0"><img alt="кадр" src="data:image/jpeg;base64,' + f.image_base64 +
+           '"><figcaption class="muted">' + esc(f.timestamp_sec) + ' с</figcaption></figure>').join('') +
+         '</div></div>';
+  }
+  el.innerHTML = h;
+}
+</script>
+</body>
+</html>

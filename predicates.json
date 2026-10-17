@@ -1,0 +1,12 @@
+{
+  "scene_context": "This is a still frame from a surveillance camera in a bank cash room. The cashier is the person sitting at the desk that has a laptop and a banknote counting machine.",
+  "suffix": "Answer with one word: Yes or No.",
+  "predicates": {
+    "cash_on_desk": "Are banknotes or a stack of paper money lying openly on the desk surface?",
+    "client_seated": "Is there a second person, not the cashier, sitting at the desk facing the cashier?",
+    "visitor_present": "Is there a person other than the cashier who is standing or walking (not sitting) in the room or at the door?",
+    "cashier_away": "Is the cashier absent from the desk, i.e. nobody is sitting in the cashier's chair?",
+    "phone_visible": "Is anyone holding or using a mobile phone?",
+    "person_on_cashier_side": "Is there a person other than the cashier standing or sitting on the cashier's side of the desk?"
+  }
+}

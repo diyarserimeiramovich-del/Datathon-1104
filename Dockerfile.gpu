@@ -1,0 +1,13 @@
+# Образ с локальной VLM. НЕ ПРОВЕРЕН в моей среде (нет GPU и сети): соберите и проверьте у себя.
+# Веса модели скачиваются заранее и монтируются, поэтому интернет при обработке видео не нужен.
+FROM pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /srv
+COPY requirements.txt requirements-vlm.txt ./
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-vlm.txt
+COPY . .
+ENV DATA_DIR=/srv/data USE_VLM=1 HF_HUB_OFFLINE=1 MODEL_ID=/models/qwen2-vl-2b
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# docker build -f Dockerfile.gpu -t cashier-ai .
+# docker run --gpus all -p 8000:8000 -e API_KEY=<ключ> -v /путь/к/qwen2-vl-2b:/models/qwen2-vl-2b -v $PWD/data:/srv/data cashier-ai
