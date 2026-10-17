@@ -7,3 +7,5 @@ __pycache__/
 cache/
 data/contacts/
 cache_run.log
+contact.log
+contacts_server.log

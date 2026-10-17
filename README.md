@@ -17,6 +17,8 @@ UI: http://localhost:8000 · API: `POST /api/v1/analyze`, `GET /api/v1/jobs/{id}
     python -m eval.labels open_labels.xlsx > data/labels.csv      # метки (уже лежит в data/)
     python -m eval.cache_predicates videos/ cache/                # тяжёлый проход один раз
     python -m eval.evaluate data/labels.csv cache/                # пороги в rules.json меняйте и пересчитывайте
+    python -m eval.sweep data/labels_grouped.csv cache/           # сетка порогов по всему кэшу
+    python -m eval.contact_sheets data/labels_grouped.csv videos/  # кадры вокруг меток для ручной разметки типов
 
 ## Где что
 - `rules.json` типы нарушений, пороги, проверенные ссылки на нормы
