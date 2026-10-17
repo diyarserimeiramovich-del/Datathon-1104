@@ -11,3 +11,5 @@ contact.log
 contacts_server.log
 cache_boxes/
 boxes_run.log
+data/jobs/
+data/uploads/
