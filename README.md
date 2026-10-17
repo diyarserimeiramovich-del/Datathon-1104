@@ -11,7 +11,8 @@ UI: http://localhost:8000 · API: `POST /api/v1/analyze`, `GET /api/v1/jobs/{id}
 Правило «покинул рабочее место» считается по детектору людей: torchvision FasterRCNN-MobileNet,
 зона рабочего места из первых секунд клипа. Нужен только torch+torchvision (`requirements-vlm.txt`);
 если их нет, правило отключается само, остальное работает. Выключить явно: `USE_OCCUPANCY=0`.
-На 42 видео: TP=7 FP=0 против TP=3 FP=0 у VLM — см. `docs/06_OCCUPANCY_SENSOR.md`.
+По размеченным типам ловит 3 из 6 роликов «ушёл с рабочего места» без ложных на норме;
+выигрыш над VLM — одно видео, но в 60 раз быстрее. Подробности и оговорки — `docs/06_OCCUPANCY_SENSOR.md`.
 
 ## Запуск с VLM (нужен GPU)
     pip install -r requirements-vlm.txt
@@ -25,6 +26,7 @@ UI: http://localhost:8000 · API: `POST /api/v1/analyze`, `GET /api/v1/jobs/{id}
     python -m eval.cache_predicates videos/ cache/                # тяжёлый проход VLM, ~2 ч на 42 видео
     python -m eval.evaluate data/labels_grouped.csv cache/ cache_boxes/   # метрики по обоим сигналам
     python -m eval.sweep data/labels_grouped.csv cache/           # сетка параметров по всему кэшу
+    python -m eval.type_metrics data/labels_grouped.csv data/labels_types.csv cache/ cache_boxes/  # метрики по типам
     python -m tests.test_occupancy                                # признак занятости, без GPU
     python -m eval.contact_sheets data/labels_grouped.csv videos/  # кадры вокруг меток для ручной разметки типов
 
